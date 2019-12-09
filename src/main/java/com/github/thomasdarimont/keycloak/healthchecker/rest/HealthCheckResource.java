@@ -7,10 +7,7 @@ import com.github.thomasdarimont.keycloak.healthchecker.spi.GuardedHeathIndicato
 import com.github.thomasdarimont.keycloak.healthchecker.spi.HealthIndicator;
 import org.keycloak.models.KeycloakSession;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
@@ -30,6 +27,7 @@ public class HealthCheckResource {
     @Path("check")
     @Produces(MediaType.APPLICATION_JSON)
     public Response checkHealth() {
+        restrictToMasterRealm();
 
         return aggregatedHealthStatusFrom(this.session.getAllProviders(HealthIndicator.class))
                 .map(this::toHealthResponse)
@@ -40,6 +38,7 @@ public class HealthCheckResource {
     @Path("check/{indicator}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response checkHealthFor(@PathParam("indicator") String name) {
+        restrictToMasterRealm();
 
         return tryFindFirstHealthIndicatorWithName(name)
                 .map(GuardedHeathIndicator::new)
@@ -86,5 +85,11 @@ public class HealthCheckResource {
         accumulator.addHealthInfo(second);
 
         return accumulator;
+    }
+
+    private void restrictToMasterRealm() {
+        if (!"master".equals(session.getContext().getRealm().getName())) {
+            throw new NotFoundException();
+        }
     }
 }

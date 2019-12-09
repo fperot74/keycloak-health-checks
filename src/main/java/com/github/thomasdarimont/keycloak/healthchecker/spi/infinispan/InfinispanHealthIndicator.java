@@ -3,10 +3,10 @@ package com.github.thomasdarimont.keycloak.healthchecker.spi.infinispan;
 import com.github.thomasdarimont.keycloak.healthchecker.model.HealthStatus;
 import com.github.thomasdarimont.keycloak.healthchecker.model.KeycloakHealthStatus;
 import com.github.thomasdarimont.keycloak.healthchecker.spi.AbstractHealthIndicator;
-import lombok.extern.jbosslog.JBossLog;
 import org.infinispan.health.ClusterHealth;
 import org.infinispan.health.Health;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.jboss.logging.Logger;
 import org.keycloak.Config;
 
 import javax.naming.InitialContext;
@@ -16,8 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@JBossLog
 public class InfinispanHealthIndicator extends AbstractHealthIndicator {
+
+    private static final Logger LOG = Logger.getLogger(InfinispanHealthIndicator.class);
 
     private static final String KEYCLOAK_CACHE_MANAGER_JNDI_NAME = "java:jboss/infinispan/container/keycloak";
 
@@ -55,7 +56,7 @@ public class InfinispanHealthIndicator extends AbstractHealthIndicator {
         try {
             return (EmbeddedCacheManager) new InitialContext().lookup(KEYCLOAK_CACHE_MANAGER_JNDI_NAME);
         } catch (NamingException e) {
-            log.warnv("Could not find EmbeddedCacheManager with name: {0}", KEYCLOAK_CACHE_MANAGER_JNDI_NAME);
+            LOG.warnv("Could not find EmbeddedCacheManager with name: {0}", KEYCLOAK_CACHE_MANAGER_JNDI_NAME);
             throw new RuntimeException(e);
         }
     }
