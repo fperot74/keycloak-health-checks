@@ -1,10 +1,13 @@
 package com.github.thomasdarimont.keycloak.healthchecker.rest;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.thomasdarimont.keycloak.healthchecker.model.AggregatedHealthStatus;
 import com.github.thomasdarimont.keycloak.healthchecker.model.HealthStatus;
 import com.github.thomasdarimont.keycloak.healthchecker.spi.GuardedHeathIndicator;
 import com.github.thomasdarimont.keycloak.healthchecker.spi.HealthIndicator;
+import org.jboss.logging.Logger;
 import org.keycloak.models.KeycloakSession;
 
 import javax.ws.rs.*;
@@ -14,6 +17,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public class HealthCheckResource {
+
+    private static final Logger LOG = Logger.getLogger(HealthCheckResource.class);
 
     private static final Response NOT_FOUND = Response.status(Response.Status.NOT_FOUND).build();
 
@@ -59,6 +64,14 @@ public class HealthCheckResource {
 
         if (health.isUp()) {
             return Response.ok(health).build();
+        }
+
+        try {
+            ObjectMapper om = new ObjectMapper();
+            LOG.warnf("DEGRADED Health Check: %s", om.writeValueAsString(health));
+        }
+        catch (JsonProcessingException ex) {
+            LOG.warn("Unexpected issue while marshalling health status to JSON");
         }
 
         return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(health).build();
